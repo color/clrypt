@@ -4,7 +4,7 @@ from  os import environ
 from M2Crypto import X509, SMIME, BIO
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 
 try:
     ENV_CERT = environ['CLRYPT_CERT']
