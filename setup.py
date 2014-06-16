@@ -1,6 +1,6 @@
 import os
 
-from clrypt import __version__
+from clrypt.version import __version__
 
 try:
   from setuptools import setup

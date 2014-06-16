@@ -3,8 +3,10 @@ import os.path
 from  os import environ
 from M2Crypto import X509, SMIME, BIO
 
+from clrypt.version import __version__
 
-__version__ = "0.1.3"
+
+__version__ = __version__
 
 try:
     ENV_CERT = environ['CLRYPT_CERT']
