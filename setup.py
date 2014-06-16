@@ -1,7 +1,5 @@
 import os
 
-from clrypt.version import __version__
-
 try:
   from setuptools import setup
 except:
@@ -9,7 +7,7 @@ except:
 
 
 setup(name = "clrypt",
-      version = __version__,
+      version = "0.1.5",
       description = "A tool to encrypt/decrypt files.",
       author = "Color Genomics",
       author_email = "dev@getcolor.com",
