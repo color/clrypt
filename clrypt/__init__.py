@@ -1,5 +1,4 @@
 import hashlib
-import yaml
 import os.path
 from  os import environ
 from M2Crypto import X509, SMIME, BIO
@@ -84,4 +83,5 @@ def _id_from_cert(cert=ENV_CERT):
 
 def _as_dict(raw_data):
     """Turn keyfile raw data into a simple dict"""
+    import yaml
     return yaml.load(raw_data)
