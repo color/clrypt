@@ -15,6 +15,9 @@ setup(name = "clrypt",
       author_email = "dev@getcolor.com",
       url = "https://github.com/ColorGenomics/clrypt",
       packages = ["clrypt"],
-      install_requires=['M2Crypto>=0.22.3'],
+      install_requires=[
+        'M2Crypto>=0.22.3',
+        'PyYAML==3.10',
+      ],
       license = "MIT",
       )
