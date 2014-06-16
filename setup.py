@@ -17,7 +17,7 @@ setup(name = "clrypt",
       packages = ["clrypt"],
       install_requires=[
         'M2Crypto>=0.22.3',
-        'PyYAML==3.10',
+        'PyYAML>=3.10',
       ],
       license = "MIT",
       )
