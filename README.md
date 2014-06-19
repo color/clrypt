@@ -11,6 +11,11 @@ $ pip install git+https://git+https://github.com/ColorGenomics/clrypt.git@v0.1.3
 
 * Create a directory called `encrypted` in your root directory.
 
+* Set path to encrypted dir.
+```
+$ export ENCRYPTED_DIR=/path/to/encrypted
+```
+
 * Set paths to cert and pk to use for encryption as environment variables.
 ```
 $ export CLRYPT_CERT=/path/to/cert/file.crt

@@ -11,6 +11,11 @@ except:
     ENV_CERT = None
     ENV_PK = None
 
+try:
+    ENCRYPTED_DIR = environ['ENCRYPTED_DIR']
+except:
+    ENCRYPTED_DIR = None
+
 def read_file(group, name, ext='yaml', pk=ENV_PK, cert=ENV_CERT):
     """Returns the DECRYPTED keyfile named by the given `group',
     `name' and `ext' (as passed to ``encrypted_file_path'')."""
@@ -54,6 +59,8 @@ def write_file(in_fp, group, name, ext='yaml'):
     return outpath
 
 def _find_encrypted_dir(name="encrypted"):
+    if ENCRYPTED_DIR:
+        return ENCRYPTED_DIR
     path = '.'
     while os.path.split(os.path.abspath(path))[1]:
         dir_path = os.path.join(path, name)
