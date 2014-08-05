@@ -25,7 +25,10 @@ def read_file(group, name, ext='yaml', pk=ENV_PK, cert=ENV_CERT):
     if not (os.path.exists(cert)):
         raise ValueError('Cert file does not exist: %s' % cert)
     s.load_key(pk, cert)
-    p7, data = SMIME.smime_load_pkcs7(_encrypted_file_path(group, name, ext))
+    encrypted_file = _encrypted_file_path(group, name, ext)
+    if not os.path.exists(encrypted_file):
+        raise ValueError("Encrypted file %(encrypted_file)s doesn't exist." % locals())
+    p7, data = SMIME.smime_load_pkcs7(encrypted_file)
     return s.decrypt(p7)
 
 def read_file_as_dict(group, name, ext='yaml'):
