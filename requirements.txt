@@ -1,2 +1,2 @@
-M2Crypto==0.22.3
-PyYAML==3.11
+M2Crypto>=0.22.5
+PyYAML>=3.11

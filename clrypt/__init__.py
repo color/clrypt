@@ -70,7 +70,7 @@ def _find_encrypted_dir(name="encrypted"):
         if os.path.exists(dir_path):
             return os.path.abspath(dir_path)
         path = os.path.join('..', path)
-    raise Exception("%s could not be located.")
+    raise Exception("%s could not be located." % name)
 
 def _encrypted_file_path(group, name, ext='yaml'):
     """Construct a path to the keyfile named by the `group' and
