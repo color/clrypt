@@ -41,7 +41,7 @@ class OpenSSLKeypair(object):
         m.update(bignum_to_mpi(modulus))
         return m.hexdigest()
 
-    def encrypt(self, bytes):
+    def encrypt(self, plaintext):
         """Encrypt a plaintext bytestring to an S/MIME-encoded bytestring."""
         pipe = subprocess.Popen(
             [self.openssl_bin, 'smime', '-encrypt', '-des3',
@@ -49,12 +49,12 @@ class OpenSSLKeypair(object):
             stdin=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE)
-        encrypted, err = pipe.communicate(input=bytes)
+        encrypted, err = pipe.communicate(input=plaintext)
         if pipe.poll() != 0:
             raise RuntimeError("Error encrypting plaintext: %r" % err)
         return encrypted
 
-    def decrypt(self, bytes):
+    def decrypt(self, ciphertext):
         """Decrypt an S/MIME-encoded bytestring to a plaintext bytestring."""
         pipe = subprocess.Popen(
             [self.openssl_bin, 'smime', '-decrypt',
@@ -64,7 +64,7 @@ class OpenSSLKeypair(object):
             stdin=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE)
-        decrypted, err = pipe.communicate(input=bytes)
+        decrypted, err = pipe.communicate(input=ciphertext)
         if pipe.poll() != 0:
             raise RuntimeError("Error decrypting ciphertext: %r" % err)
         return decrypted
@@ -95,13 +95,13 @@ def bignum_to_mpi(integer):
         header = struct.pack('>I', length)
 
     # Build a big-endian arbitrary-length representation of the number
-    bytes = []
+    raw_bytes = []
     while integer > 0:
-        bytes.insert(0, chr(integer % 256))
+        raw_bytes.insert(0, chr(integer % 256))
         integer = integer >> 8
-    bytes = b''.join(bytes)
+    raw_bytestring = b''.join(raw_bytes)
 
-    return header + bytes
+    return header + raw_bytestring
 
 
 def parse_pubkey(pubkey_s):
@@ -126,9 +126,9 @@ def bitstring_to_bytes(bitstring):
     if len(bitstring) % 8 != 0:
         raise ValueError("Unaligned bitstrings cannot be converted to bytes")
 
-    bytes = []
+    raw_bytes = []
     ones_and_zeros = ''.join(str(b) for b in bitstring)
     while ones_and_zeros:
-        bytes.append(chr(int(ones_and_zeros[:8], 2)))
+        raw_bytes.append(chr(int(ones_and_zeros[:8], 2)))
         ones_and_zeros = buffer(ones_and_zeros, 8)
-    return ''.join(bytes)
+    return ''.join(raw_bytes)

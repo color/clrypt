@@ -24,8 +24,8 @@ class EncryptedDirectory(object):
     def read_file(self, group, name, ext='yaml'):
         """Read the named file as a bytestring of decrypted plaintext."""
         with open(self.encrypted_file_path(group, name, ext=ext)) as encrypted:
-            bytes = encrypted.read()
-            return self.keypair.decrypt(bytes)
+            ciphertext = encrypted.read()
+        return self.keypair.decrypt(ciphertext)
 
     def read_yaml_file(self, group, name, ext='yaml'):
         """Read the named file as decrypted YAML."""
