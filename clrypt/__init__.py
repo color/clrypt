@@ -40,14 +40,11 @@ def _get_encdir():
 
 def _find_encrypted_directory(current_dir, dirname='encrypted', limit=100):
     # Stop if the limit has been reached, or we're at the root dir
-    if limit == 0 or os.path.dirname(current_dir) == current_dir:
-        return None
-    elif os.path.isdir(os.path.join(current_dir, dirname)):
-        return os.path.join(current_dir, dirname)
-    return _find_encrypted_directory(
-        os.path.abspath(os.path.dirname(current_dir)),
-        dirname=dirname,
-        limit=limit - 1)
+    while limit > 0 and os.path.dirname(current_dir) != current_dir:
+        if os.path.isdir(os.path.join(current_dir, dirname)):
+            return os.path.join(current_dir, dirname)
+        current_dir = os.path.abspath(os.path.dirname(current_dir))
+        limit -= 1
 
 
 def read_file(group, name, ext='yaml'):
