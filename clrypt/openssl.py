@@ -11,10 +11,16 @@ class OpenSSLKeypair(object):
     An X509 cert and private key, which can en/decrypt arbitrary bytestrings.
     """
 
-    def __init__(self, cert_filename, key_filename):
-        """Create a keypair from the provided certificate and key file paths."""
+    def __init__(self, cert_filename, key_filename, openssl_bin='openssl'):
+        """
+        Create a keypair from the provided certificate and key file paths.
+
+        Optionally, override the path to the openssl binary used for
+        encryption/decryption.
+        """
         self.cert_filename = cert_filename
         self.key_filename = key_filename
+        self.openssl_bin = openssl_bin
 
     def get_key_id(self):
         """
@@ -26,7 +32,8 @@ class OpenSSLKeypair(object):
         format; see `bignum_to_mpi()` for details.
         """
         pubkey_text = subprocess.check_output(
-            ['openssl', 'x509', '-pubkey', '-noout', '-in', self.cert_filename])
+            [self.openssl_bin, 'x509', '-pubkey', '-noout',
+             '-in', self.cert_filename])
         modulus, exponent = parse_pubkey(pubkey_text)
 
         m = hashlib.md5()
@@ -37,20 +44,29 @@ class OpenSSLKeypair(object):
     def encrypt(self, bytes):
         """Encrypt a plaintext bytestring to an S/MIME-encoded bytestring."""
         pipe = subprocess.Popen(
-            ['openssl', 'smime', '-encrypt', '-des3', self.cert_filename],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        encrypted, _ = pipe.communicate(input=bytes)
+            [self.openssl_bin, 'smime', '-encrypt', '-des3',
+             self.cert_filename],
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        encrypted, err = pipe.communicate(input=bytes)
+        if pipe.poll() != 0:
+            raise RuntimeError("Error encrypting plaintext: %r" % err)
         return encrypted
 
     def decrypt(self, bytes):
         """Decrypt an S/MIME-encoded bytestring to a plaintext bytestring."""
         pipe = subprocess.Popen(
-            ['openssl', 'smime', '-decrypt',
+            [self.openssl_bin, 'smime', '-decrypt',
              '-inkey', self.key_filename,
              '-binary',
              self.cert_filename],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        decrypted, _ = pipe.communicate(input=bytes)
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        decrypted, err = pipe.communicate(input=bytes)
+        if pipe.poll() != 0:
+            raise RuntimeError("Error decrypting ciphertext: %r" % err)
         return decrypted
 
 
