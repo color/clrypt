@@ -6,7 +6,7 @@ A tool to encrypt/decrypt files.
 
 * Install clrypt
 ```
-$ pip install git+https://git+https://github.com/ColorGenomics/clrypt.git@v0.1.3
+$ pip install git+https://github.com/color/clrypt.git@v0.2.1
 ```
 
 * Create a directory called `encrypted` in your root directory.

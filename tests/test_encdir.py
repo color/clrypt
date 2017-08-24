@@ -1,4 +1,7 @@
-from StringIO import StringIO
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from io import BytesIO
 import os.path
 import shutil
 import unittest
@@ -27,19 +30,19 @@ class EncryptedDirectoryTest(unittest.TestCase):
     def test_read_file(self):
         path = self.encdir.encrypted_file_path('dev', 'secrets2', ext='yaml')
         os.makedirs(os.path.dirname(path))
-        with open(path, 'w') as fp:
-            fp.write("E:some secret data")
+        with open(path, 'wb') as fp:
+            fp.write(b"E:some secret data")
 
         plaintext = self.encdir.read_file('dev', 'secrets2', ext='yaml')
-        self.assertEqual(plaintext, "some secret data")
+        self.assertEqual(plaintext, b"some secret data")
 
     def test_read_yaml_file(self):
         path = self.encdir.encrypted_file_path('dev', 'secrets3', ext='yaml')
         os.makedirs(os.path.dirname(path))
-        with open(path, 'w') as fp:
-            fp.write('E:rootKey:\n')
-            fp.write('  subKey1: value\n')
-            fp.write('  subKey2: 123\n')
+        with open(path, 'wb') as fp:
+            fp.write(b'E:rootKey:\n')
+            fp.write(b'  subKey1: value\n')
+            fp.write(b'  subKey2: 123\n')
 
         plainobj = self.encdir.read_yaml_file('dev', 'secrets3', ext='yaml')
         self.assertEqual(
@@ -48,11 +51,11 @@ class EncryptedDirectoryTest(unittest.TestCase):
 
     def test_write_file(self):
         path = self.encdir.encrypted_file_path('dev', 'secrets4', 'yaml')
-        contents = "another secret datum"
+        contents = b"another secret datum"
 
-        self.encdir.write_file(StringIO(contents), 'dev', 'secrets4', ext='yaml')
-        with open(path) as fp:
-            self.assertEqual(fp.read(), "E:" + contents)
+        self.encdir.write_file(BytesIO(contents), 'dev', 'secrets4', ext='yaml')
+        with open(path, 'rb') as fp:
+            self.assertEqual(fp.read(), b"E:" + contents)
 
 
 class DummyKeypair(object):
@@ -60,8 +63,8 @@ class DummyKeypair(object):
         return "dummy12345"
 
     def encrypt(self, bytes):
-        return "E:" + bytes
+        return b"E:" + bytes
 
     def decrypt(self, bytes):
-        assert bytes.startswith("E:")
+        assert bytes.startswith(b"E:")
         return bytes[2:]

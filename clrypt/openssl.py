@@ -1,6 +1,9 @@
+from __future__ import unicode_literals
+from builtins import object
 import hashlib
 import struct
 import subprocess
+import base64
 
 from pyasn1.codec.der import decoder
 
@@ -94,14 +97,7 @@ def bignum_to_mpi(integer):
     else:
         header = struct.pack('>I', length)
 
-    # Build a big-endian arbitrary-length representation of the number
-    raw_bytes = []
-    while integer > 0:
-        raw_bytes.insert(0, chr(integer % 256))
-        integer = integer >> 8
-    raw_bytestring = b''.join(raw_bytes)
-
-    return header + raw_bytestring
+    return header + int_to_bytearray(integer)
 
 
 def parse_pubkey(pubkey_s):
@@ -114,10 +110,10 @@ def parse_pubkey(pubkey_s):
         ...base64...
         -----END PUBLIC KEY-----
     """
-    der_encoded = ''.join(pubkey_s.strip().splitlines()[1:-1]).decode('base64')
+    der_encoded = base64.b64decode(b''.join(pubkey_s.strip().splitlines()[1:-1]))
     rsa_params_encoded = bitstring_to_bytes(decoder.decode(der_encoded)[0][1])
     rsa_params = decoder.decode(rsa_params_encoded)
-    modulus, exponent = long(rsa_params[0][0]), long(rsa_params[0][1])
+    modulus, exponent = int(rsa_params[0][0]), int(rsa_params[0][1])
     return (modulus, exponent)
 
 def bitstring_to_bytes(bitstring):
@@ -126,9 +122,14 @@ def bitstring_to_bytes(bitstring):
     if len(bitstring) % 8 != 0:
         raise ValueError("Unaligned bitstrings cannot be converted to bytes")
 
-    raw_bytes = []
-    ones_and_zeros = ''.join(str(b) for b in bitstring)
-    while ones_and_zeros:
-        raw_bytes.append(chr(int(ones_and_zeros[:8], 2)))
-        ones_and_zeros = buffer(ones_and_zeros, 8)
-    return ''.join(raw_bytes)
+    integer = int(''.join(str(x) for x in bitstring), 2)
+    return bytes(int_to_bytearray(integer))
+
+def int_to_bytearray(integer):
+    # Build a big-endian arbitrary-length representation of the number
+    raw_bytes = bytearray()
+    while integer > 0:
+        raw_bytes.insert(0, integer & 0xff)
+        integer = integer >> 8
+
+    return raw_bytes

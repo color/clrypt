@@ -49,7 +49,7 @@ class TestEnvironment(unittest.TestCase):
         self.prev_dir = os.getcwd()
 
     def tearDown(self):
-        for attr in vars(clrypt._environment).keys():
+        for attr in list(vars(clrypt._environment).keys()):
             delattr(clrypt._environment, attr)
         os.chdir(self.prev_dir)
 
@@ -59,7 +59,7 @@ class TestEnvironment(unittest.TestCase):
         os.environ['ENCRYPTED_DIR'] = EXPECTED_ENC_DIR
 
         decrypted = clrypt.read_file("testing", "content", ext="yml")
-        self.assertEqual(decrypted, "test content")
+        self.assertEqual(decrypted, b"test content")
 
     def test_happy_path_find_encrypted_dir(self):
         os.environ['CLRYPT_CERT'] = CERT_FILE
@@ -68,4 +68,4 @@ class TestEnvironment(unittest.TestCase):
         os.chdir(TEST_DIR)
 
         decrypted = clrypt.read_file("testing", "content", ext="yml")
-        self.assertEqual(decrypted, "test content")
+        self.assertEqual(decrypted, b"test content")
