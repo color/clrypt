@@ -1,2 +1,3 @@
+future==0.16.0
 PyYAML>=3.11
 pyasn1==0.1.9

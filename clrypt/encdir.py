@@ -1,3 +1,4 @@
+from builtins import object
 import os
 
 
@@ -23,7 +24,7 @@ class EncryptedDirectory(object):
 
     def read_file(self, group, name, ext='yaml'):
         """Read the named file as a bytestring of decrypted plaintext."""
-        with open(self.encrypted_file_path(group, name, ext=ext)) as encrypted:
+        with open(self.encrypted_file_path(group, name, ext=ext), mode='rb') as encrypted:
             ciphertext = encrypted.read()
         return self.keypair.decrypt(ciphertext)
 
@@ -45,7 +46,7 @@ class EncryptedDirectory(object):
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
 
-        with open(out_path, 'w') as out_fp:
+        with open(out_path, 'wb') as out_fp:
             out_fp.write(encrypted)
         return out_path
 
