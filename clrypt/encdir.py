@@ -31,7 +31,7 @@ class EncryptedDirectory(object):
     def read_yaml_file(self, group, name, ext='yaml'):
         """Read the named file as decrypted YAML."""
         import yaml
-        return yaml.load(self.read_file(group, name, ext=ext))
+        return yaml.full_load(self.read_file(group, name, ext=ext))
 
     def write_file(self, in_fp, group, name, ext='yaml'):
         """Encrypt and write the contents of a file-like object to the named file."""
