@@ -7,11 +7,11 @@ except:
 
 
 setup(name = "clrypt",
-      version = "0.2.1",
+      version = "0.2.3",
       description = "A tool to encrypt/decrypt files.",
       author = "Color Genomics",
       author_email = "dev@getcolor.com",
-      url = "https://github.com/ColorGenomics/clrypt",
+      url = "https://github.com/color/clrypt",
       packages = ["clrypt"],
       install_requires=[
           'PyYAML>=3.10',
