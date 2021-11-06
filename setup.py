@@ -7,7 +7,7 @@ except:
 
 
 setup(name = "clrypt",
-      version = "0.2.2",
+      version = "0.2.3",
       description = "A tool to encrypt/decrypt files.",
       author = "Color Genomics",
       author_email = "dev@getcolor.com",
