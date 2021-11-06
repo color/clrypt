@@ -1,4 +1,5 @@
-import os.path
+import os
+from pathlib import Path
 import threading
 
 from .encdir import EncryptedDirectory
@@ -11,30 +12,38 @@ _environment = threading.local()
 def _get_encdir():
     if not hasattr(_environment, 'encdir'):
         cert_file = os.environ.get('CLRYPT_CERT')
-        if cert_file is None:
+        if not cert_file:
             raise RuntimeError("The environment variable CLRYPT_CERT must be set")
-        if not os.path.isfile(cert_file):
-            raise RuntimeError("CLRYPT_CERT points to a non-existent file: %r" % cert_file)
+        cert_file = Path(cert_file).expanduser()
+        if not cert_file.is_file():
+            raise RuntimeError(
+                "CLRYPT_CERT points to a non-existent file: %r" % cert_file
+            )
 
         pk_file = os.environ.get('CLRYPT_PK')
-        if pk_file is None:
+        if not pk_file:
             raise RuntimeError("The environment variable CLRYPT_PK must be set")
-        if not os.path.isfile(pk_file):
+        pk_file = Path(pk_file).expanduser()
+        if not pk_file.is_file():
             raise RuntimeError("CLRYPT_PK points to a non-existent file: %r" % pk_file)
 
         encrypted_dir = os.environ.get('ENCRYPTED_DIR')
-        if encrypted_dir is None:
+        if not encrypted_dir:
             encrypted_dir = _find_encrypted_directory(os.getcwd())
             if encrypted_dir is None:
-                raise RuntimeError("Couldn't find an encrypted directory in "
-                                   "the current dir or its ancestors")
-        if not os.path.isdir(encrypted_dir):
-            raise RuntimeError("ENCRYPTED_DIR points to a non-existent "
-                               "directory: %r" % encrypted_dir)
+                raise RuntimeError(
+                    "Couldn't find an encrypted directory in "
+                    "the current dir or its ancestors"
+                )
+        encrypted_dir = Path(encrypted_dir).expanduser()
+        if not encrypted_dir.is_dir():
+            raise RuntimeError(
+                "ENCRYPTED_DIR points to a non-existent "
+                "directory: %r" % encrypted_dir
+            )
 
         _environment.keypair = OpenSSLKeypair(cert_file, pk_file)
-        _environment.encdir = EncryptedDirectory(encrypted_dir,
-                                                 _environment.keypair)
+        _environment.encdir = EncryptedDirectory(encrypted_dir, _environment.keypair)
     return _environment.encdir
 
 
@@ -51,9 +60,11 @@ def read_file(group, name, ext='yaml'):
     """Decrypt and read the named encrypted file."""
     return _get_encdir().read_file(group, name, ext=ext)
 
+
 def read_file_as_dict(group, name, ext='yaml'):
     """Read the specified encrypted file as a YAML dictionary."""
     return _get_encdir().read_yaml_file(group, name, ext=ext)
+
 
 def write_file(in_fp, group, name, ext='yaml'):
     """Encrypt and write the contents of in_fp to the named encrypted file."""
