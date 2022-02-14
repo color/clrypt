@@ -1,32 +1,109 @@
 import os
-from pathlib import Path
+import logging
+import tempfile
 import threading
+from pathlib import Path
+from typing import Optional
 
 from .encdir import EncryptedDirectory
 from .openssl import OpenSSLKeypair
 
+logger = logging.getLogger('clrypt')
 
 _environment = threading.local()
 
 
+def _load_keypair_from_ssm() -> Optional[OpenSSLKeypair]:
+    """Tries to load keypair from aws ssm. Returns None for any failures."""
+    key_mode = os.environ.get('COLOR_KEY_MODE')
+    if not key_mode:
+        return
+
+    try:
+        import boto3
+        import botocore
+
+        ssm = boto3.client('ssm')
+
+        tempdir = Path(tempfile.gettempdir())
+
+        cert_param_name = f'/clrypt/{key_mode}.crt'
+        cert_path = tempdir / cert_param_name[1:]
+        pk_param_name = f'/clrypt/{key_mode}.pem'
+        pk_path = tempdir / pk_param_name[1:]
+
+        params = ssm.get_parameters(
+            Names=[cert_param_name, pk_param_name],
+            WithDecryption=True,
+        )
+        param_values = {p['Name']: p['Value'] for p in params['Parameters']}
+
+        if cert_param_name not in param_values or pk_param_name not in param_values:
+            return
+
+        cert_path.parent.mkdir(exist_ok=True)
+        cert_path.write_text(param_values[cert_param_name])
+        pk_path.write_text(param_values[pk_param_name])
+
+        logging.warning(
+            'clrypt keypair was loaded from SSM. This is an EXPERIMENTAL feature. '
+            'DO NOT rely on this for production services.'
+        )
+
+        return OpenSSLKeypair(cert_path, pk_path)
+    except (
+        ModuleNotFoundError,
+        botocore.exceptions.EndpointConnectionError,
+        botocore.exceptions.ClientError,
+    ):
+        logger.exception('Could not load keypair from ssm.')
+        # This covers boto3 not being importable, no ssm access, and connection errors.
+        return
+
+
+def _load_keypair_from_env() -> Optional[OpenSSLKeypair]:
+    """Tries to load keypair from files referenced in env vars."""
+    cert_file = os.environ.get('CLRYPT_CERT')
+    if not cert_file:
+        return
+    cert_file = Path(cert_file).expanduser()
+    if not cert_file.is_file():
+        return
+
+    pk_file = os.environ.get('CLRYPT_PK')
+    if pk_file:
+        pk_file = Path(pk_file).expanduser()
+    if not pk_file or not pk_file.is_file():
+        raise RuntimeError("CLRYPT_PK points to a non-existent file: %r" % pk_file)
+
+    return OpenSSLKeypair(cert_file, pk_file)
+
+
+def _load_keypair() -> OpenSSLKeypair:
+    """Returns a OpenSSLKeypair for decrypting the encrypted dir.
+
+    The plan is to remove clrypt entirely, but for now we try to be as flexible as we
+    can to support the migration.
+
+    If CLRYPT_CERT/CLRYPT_PK to valid files they will be loaded from disk. If keypair can not
+    be loaded from disk, but COLOR_KEY_MODE is set we try to load from SSM parameter store.
+    """
+    keypair = _load_keypair_from_env()
+    if keypair:
+        return keypair
+
+    keypair = _load_keypair_from_ssm()
+    if keypair:
+        return keypair
+
+    raise RuntimeError(
+        "Can not find clrypt keypair. Please set CLRYPT_PK and CLRYPT_CERT to valid "
+        "paths containing the keypair."
+    )
+
+
 def _get_encdir():
     if not hasattr(_environment, 'encdir'):
-        cert_file = os.environ.get('CLRYPT_CERT')
-        if not cert_file:
-            raise RuntimeError("The environment variable CLRYPT_CERT must be set")
-        cert_file = Path(cert_file).expanduser()
-        if not cert_file.is_file():
-            raise RuntimeError(
-                "CLRYPT_CERT points to a non-existent file: %r" % cert_file
-            )
-
-        pk_file = os.environ.get('CLRYPT_PK')
-        if not pk_file:
-            raise RuntimeError("The environment variable CLRYPT_PK must be set")
-        pk_file = Path(pk_file).expanduser()
-        if not pk_file.is_file():
-            raise RuntimeError("CLRYPT_PK points to a non-existent file: %r" % pk_file)
-
         encrypted_dir = os.environ.get('ENCRYPTED_DIR')
         if not encrypted_dir:
             encrypted_dir = _find_encrypted_directory(os.getcwd())
@@ -42,7 +119,7 @@ def _get_encdir():
                 "directory: %r" % encrypted_dir
             )
 
-        _environment.keypair = OpenSSLKeypair(cert_file, pk_file)
+        _environment.keypair = _load_keypair()
         _environment.encdir = EncryptedDirectory(encrypted_dir, _environment.keypair)
     return _environment.encdir
 
