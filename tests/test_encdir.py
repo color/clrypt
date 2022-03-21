@@ -1,4 +1,5 @@
 from future import standard_library
+
 standard_library.install_aliases()
 from builtins import object
 from io import BytesIO
@@ -9,7 +10,7 @@ import unittest
 from clrypt.encdir import EncryptedDirectory
 
 
-TEST_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'test-encdir')
+TEST_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "test-encdir")
 
 
 class EncryptedDirectoryTest(unittest.TestCase):
@@ -22,39 +23,38 @@ class EncryptedDirectoryTest(unittest.TestCase):
         shutil.rmtree(TEST_DIR)
 
     def test_encrypted_file_path(self):
-        generated_path = self.encdir.encrypted_file_path('dev', 'secrets1', ext='yaml')
+        generated_path = self.encdir.encrypted_file_path("dev", "secrets1", ext="yaml")
         self.assertEqual(
-            os.path.join(TEST_DIR, 'dev', 'dummy12345-secrets1.yaml.smime'),
-            generated_path)
+            os.path.join(TEST_DIR, "dev", "dummy12345-secrets1.yaml.smime"),
+            generated_path,
+        )
 
     def test_read_file(self):
-        path = self.encdir.encrypted_file_path('dev', 'secrets2', ext='yaml')
+        path = self.encdir.encrypted_file_path("dev", "secrets2", ext="yaml")
         os.makedirs(os.path.dirname(path))
-        with open(path, 'wb') as fp:
+        with open(path, "wb") as fp:
             fp.write(b"E:some secret data")
 
-        plaintext = self.encdir.read_file('dev', 'secrets2', ext='yaml')
+        plaintext = self.encdir.read_file("dev", "secrets2", ext="yaml")
         self.assertEqual(plaintext, b"some secret data")
 
     def test_read_yaml_file(self):
-        path = self.encdir.encrypted_file_path('dev', 'secrets3', ext='yaml')
+        path = self.encdir.encrypted_file_path("dev", "secrets3", ext="yaml")
         os.makedirs(os.path.dirname(path))
-        with open(path, 'wb') as fp:
-            fp.write(b'E:rootKey:\n')
-            fp.write(b'  subKey1: value\n')
-            fp.write(b'  subKey2: 123\n')
+        with open(path, "wb") as fp:
+            fp.write(b"E:rootKey:\n")
+            fp.write(b"  subKey1: value\n")
+            fp.write(b"  subKey2: 123\n")
 
-        plainobj = self.encdir.read_yaml_file('dev', 'secrets3', ext='yaml')
-        self.assertEqual(
-            plainobj,
-            {'rootKey': {'subKey1': 'value', 'subKey2': 123}})
+        plainobj = self.encdir.read_yaml_file("dev", "secrets3", ext="yaml")
+        self.assertEqual(plainobj, {"rootKey": {"subKey1": "value", "subKey2": 123}})
 
     def test_write_file(self):
-        path = self.encdir.encrypted_file_path('dev', 'secrets4', 'yaml')
+        path = self.encdir.encrypted_file_path("dev", "secrets4", "yaml")
         contents = b"another secret datum"
 
-        self.encdir.write_file(BytesIO(contents), 'dev', 'secrets4', ext='yaml')
-        with open(path, 'rb') as fp:
+        self.encdir.write_file(BytesIO(contents), "dev", "secrets4", ext="yaml")
+        with open(path, "rb") as fp:
             self.assertEqual(fp.read(), b"E:" + contents)
 
 
