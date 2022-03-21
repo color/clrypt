@@ -5,3 +5,4 @@ build
 ve
 *.egg-info
 BUILD.pants
+dist
