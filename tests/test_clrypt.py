@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os.path
 import unittest
 
@@ -66,3 +67,42 @@ class TestEnvironment(unittest.TestCase):
 
         decrypted = clrypt.read_file("testing", "content", ext="yml")
         self.assertEqual(decrypted, b"test content")
+
+    def test_busted_env(self):
+        @dataclass
+        class TestCase:
+            dir: str
+            cert_path: str
+            key_path: str
+            expected_error_msg: str
+
+        testcases = [
+            TestCase(
+                dir=EXPECTED_ENC_DIR,
+                cert_path="not_a_cert",
+                key_path=PK_FILE,
+                expected_error_msg="CLRYPT_CERT points to a non-existent file: PosixPath('not_a_cert')",
+            ),
+            TestCase(
+                dir=EXPECTED_ENC_DIR,
+                cert_path=CERT_FILE,
+                key_path="not_a_pk",
+                expected_error_msg="CLRYPT_PK points to a non-existent file: PosixPath('not_a_pk')",
+            ),
+            TestCase(
+                dir="not_a_dir",
+                cert_path=CERT_FILE,
+                key_path=PK_FILE,
+                expected_error_msg="ENCRYPTED_DIR points to a non-existent directory: PosixPath('not_a_dir')",
+            ),
+        ]
+
+        for testcase in testcases:
+            os.environ["CLRYPT_CERT"] = testcase.cert_path
+            os.environ["CLRYPT_PK"] = testcase.key_path
+            os.environ["ENCRYPTED_DIR"] = testcase.dir
+
+            with self.assertRaises(RuntimeError) as e:
+                clrypt.read_file("testing", "content", ext="yml")
+
+            self.assertEqual(str(e.exception), testcase.expected_error_msg)
