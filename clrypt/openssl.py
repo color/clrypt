@@ -1,9 +1,7 @@
-from __future__ import unicode_literals
-from builtins import object
+import base64
 import hashlib
 import struct
 import subprocess
-import base64
 
 from pyasn1.codec.der import decoder
 

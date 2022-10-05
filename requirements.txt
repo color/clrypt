@@ -1,5 +1,3 @@
-future==0.16.0 \
-    --hash=sha256:e39ced1ab767b5936646cedba8bcce582398233d6a627067d4c6a454c90cfedb
 pyasn1==0.1.9 \
     --hash=sha256:61f9d99e3cef65feb1bfe3a2eef7a93eb93819d345bf54bcd42f4e63d5204dae \
     --hash=sha256:1802a6dd32045e472a419db1441aecab469d33e0d2749e192abdec52101724af \
