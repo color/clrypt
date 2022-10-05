@@ -1,14 +1,9 @@
-from future import standard_library
-
-standard_library.install_aliases()
-from builtins import object
-from io import BytesIO
 import os.path
 import shutil
 import unittest
+from io import BytesIO
 
 from clrypt.encdir import EncryptedDirectory
-
 
 TEST_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "test-encdir")
 
